@@ -2,15 +2,15 @@
   <q-page class="flex flex-center column bg">
     <div class="game">
       <div class="flex">
-        <div ref="red" class="btn red"></div>
-        <div ref="green" class="btn green"></div>
+        <div ref="red" class="btn red" @click="press('r')"></div>
+        <div ref="green" class="btn green" @click="press('g')"></div>
       </div>
       <div class="flex">
-        <div ref="blue" class="btn blue"></div>
-        <div ref="yellow" class="btn yellow"></div>
+        <div ref="blue" class="btn blue" @click="press('b')"></div>
+        <div ref="yellow" class="btn yellow" @click="press('y')"></div>
       </div>
       <div class="menu">
-        <span class="score">60</span>
+        <span @click="start" class="score">{{ score }}</span>
       </div>
     </div>
   </q-page>
@@ -36,7 +36,8 @@ yellow-active = #FED93F
 
 bg-color =  #313131
 
-border = 10px solid #101010
+border-size = 10px
+border-color = #101010
 
 game-size = 95vmin
 
@@ -54,8 +55,9 @@ font-color = #B7B7B7
 
 .red
   background-color red
-  border-top border
-  border-left border
+  border-style solid
+  border-width border-size (border-size / 2) (border-size / 2) border-size
+  border-color border-color
   border-top-left-radius 100%
 
 .red-active
@@ -63,8 +65,9 @@ font-color = #B7B7B7
 
 .green
   background-color green
-  border-top border
-  border-right border
+  border-style solid
+  border-width border-size border-size (border-size / 2) (border-size / 2)
+  border-color border-color
   border-top-right-radius 100%
 
 .green-active
@@ -72,8 +75,9 @@ font-color = #B7B7B7
 
 .blue
   background-color blue
-  border-bottom border
-  border-left border
+  border-style solid
+  border-width (border-size / 2) (border-size / 2) border-size border-size
+  border-color border-color
   border-bottom-left-radius 100%
 
 .blue-active
@@ -81,8 +85,9 @@ font-color = #B7B7B7
 
 .yellow
   background-color yellow
-  border-bottom border
-  border-right border
+  border-style solid
+  border-width (border-size / 2) border-size border-size (border-size / 2)
+  border-color border-color
   border-bottom-right-radius 100%
 
 .yellow-active
@@ -107,11 +112,11 @@ font-color = #B7B7B7
   position absolute
   top menu-size-calc
   left menu-size-calc
-  width 25%
-  height 25%
+  width menu-size
+  height menu-size
   border-radius 100%
   background-color menu-bg-color
-  border border
+  border border-size solid border-color
   font-family Font
   display flex
   align-items center
@@ -123,28 +128,95 @@ font-color = #B7B7B7
 </style>
 
 <script>
+
 import { defineComponent } from 'vue'
 
-// const randomColor = () => ['red', 'green', 'blue', 'yellow'][Math.floor(Math.random() * 4)]
+const randomColor = () => ['r', 'g', 'b', 'y'][Math.floor(Math.random() * 4)]
+
+const colors = {
+  r: 'red',
+  g: 'green',
+  b: 'blue',
+  y: 'yellow'
+}
+
+const audio = {
+  red: new Audio('../audio/red.mp3'),
+  green: new Audio('../audio/green.mp3'),
+  blue: new Audio('../audio/blue.mp3'),
+  yellow: new Audio('../audio/yellow.mp3')
+}
 
 export default defineComponent({
   name: 'Game',
   data: () => ({
-    seq: ['red', 'green', 'blue', 'yellow'],
-    f: 2000
+    seq: [],
+    playing: false,
+    pressIndex: 0,
+    f: 400, // keep f + d >= 600 until fix song crack
+    d: 200
   }),
   computed: {
-    test () {
+    score () {
       return this.seq.length
     }
-  }
-  /*
+  },
   methods: {
-    emitSeq(){
-      this.$refs[this.seq[i]] =
-      setTimeout(, f)
+    start () {
+      this.seq = [...this.seq, randomColor()]
+      // this.seq = ['r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r']
+      this.playSeq()
+      this.playing = true
+      this.pressIndex = 0
+      // console.log(this.seq)
+    },
+    press (color) {
+      if (!this.playing) {
+        if (this.seq[this.pressIndex] === color) {
+          // this.activate(colors[color])
+          this.playAudio(colors[color])
+          this.pressIndex += 1
+          if (this.pressIndex === this.seq.length) {
+            setTimeout(() => this.start(), this.d)
+          }
+          return
+        }
+        console.log('lose')
+      }
+    },
+    playSeq (i = 0) {
+      console.log('called')
+      const c = this.seq[i]
+      this.deactivateAll()
+      if (c) {
+        setTimeout(() => {
+          // console.log(c)
+          this.activate(colors[c])
+          this.playAudio(colors[c])
+          setTimeout(() => this.playSeq(i + 1), this.f)
+        }, this.d)
+
+        return
+      }
+      return this.finish()
+    },
+    finish () {
+      this.playing = false
+    },
+    activate (color) {
+      this.$refs[color].classList.add(color + '-active')
+    },
+    playAudio (color) {
+      audio[color].pause()
+      audio[color].currentTime = 0
+      audio[color].play()
+    },
+    deactivate (color) {
+      this.$refs[color].classList.remove(color + '-active')
+    },
+    deactivateAll () {
+      Object.values(colors).forEach(c => this.deactivate(c))
     }
   }
-  */
 })
 </script>
