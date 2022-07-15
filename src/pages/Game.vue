@@ -10,7 +10,20 @@
         <div ref="yellow" class="btn yellow" @click="press('y')"></div>
       </div>
       <div class="menu">
-        <span @click="start" class="score">{{ score }}</span>
+        <template v-if="state === 1">
+          <span class="score">{{ score }}</span>
+        </template>
+        <template v-else>
+          <div class="flex-column">
+            <div class="flex justify-center play" @click="start">
+              <q-icon name="play_arrow"/>
+            </div>
+            <div class="flex justify-center items-baseline">
+              <q-icon name="settings" class="settings" @click="settings" />
+              <span class="flex justify-center items-center record" @click="records"><q-icon name="emoji_events" /><span class="record-text">60</span></span>
+            </div>
+          </div>
+        </template>
       </div>
     </div>
   </q-page>
@@ -36,7 +49,7 @@ yellow-active = #FED93F
 
 bg-color =  #313131
 
-border-size = 10px
+border-size = 2.5vmin
 border-color = #101010
 
 game-size = 95vmin
@@ -121,9 +134,27 @@ font-color = #B7B7B7
   display flex
   align-items center
   justify-content center
-  font-size 3em
+  font-size 4vmin
   // color #04F404
   color font-color
+  line-height 1
+
+.play
+  cursor pointer
+  font-size 8vmin
+
+.settings
+  cursor pointer
+  margin-right 4px
+
+.record
+  cursor pointer
+  background-color #242424
+  border-radius 16px
+  padding 2px 3.5px 2px 2px
+
+  .record-text
+    font-size 3.7vmin
 
 </style>
 
@@ -151,6 +182,7 @@ export default defineComponent({
   name: 'Game',
   data: () => ({
     seq: [],
+    state: 0, // 0 = menu; 1 = game; 2 = gameover;
     playing: false,
     pressIndex: 0,
     f: 400, // keep f + d >= 600 until fix song crack
@@ -216,6 +248,12 @@ export default defineComponent({
     },
     deactivateAll () {
       Object.values(colors).forEach(c => this.deactivate(c))
+    },
+    settings () {
+      console.log('open settings')
+    },
+    records () {
+      console.log('open records')
     }
   }
 })
