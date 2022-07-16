@@ -1,11 +1,11 @@
 <template>
-  <q-page class="flex flex-center column bg">
+  <q-page class="column flex-center bg">
     <div class="game">
-      <div class="flex">
+      <div class="row">
         <div ref="red" class="btn red" @click="press('r')"></div>
         <div ref="green" class="btn green" @click="press('g')"></div>
       </div>
-      <div class="flex">
+      <div class="row">
         <div ref="blue" class="btn blue" @click="press('b')"></div>
         <div ref="yellow" class="btn yellow" @click="press('y')"></div>
       </div>
@@ -13,19 +13,77 @@
         <template v-if="state === 1">
           <span class="score">{{ score }}</span>
         </template>
+        <template v-else-if="state === 2">
+          <div class="column">
+            <div class="row justify-center">
+              <span class="score">{{ score }}</span>
+            </div>
+            <div class="row justify-center items-center">
+              <q-icon @click="start" class="retry-btn" name="refresh"/>
+              <q-icon @click="menu" class="home-btn" name="home"/>
+            </div>
+          </div>
+        </template>
         <template v-else>
-          <div class="flex-column">
-            <div class="flex justify-center play" @click="start">
+          <div class="column">
+            <div class="row justify-center play" @click="start">
               <q-icon name="play_arrow"/>
             </div>
-            <div class="flex justify-center items-baseline">
+            <div class="row justify-center items-baseline">
               <q-icon name="settings" class="settings" @click="settings" />
-              <span class="flex justify-center items-center record" @click="records"><q-icon name="emoji_events" /><span class="record-text">60</span></span>
+              <span class="row justify-center items-center record" @click="records"><q-icon name="emoji_events" /><span class="record-text">60</span></span>
             </div>
           </div>
         </template>
       </div>
     </div>
+    <q-dialog v-model="modalSettings" transition-show="rotate" transition-hide="rotate">
+      <q-card class="card-dialog">
+        <q-card-section>
+          <div class="text-h6">Settings</div>
+        </q-card-section>
+
+        <q-card-section class="q-pt-none">
+          <div class="row items-center">
+            <span class="q-mr-sm">Frequency (ms)</span>
+            <q-badge rounded>
+              <span class="help">?</span>
+              <q-tooltip anchor="center right" self="center left" :offset="[4, 4]">
+                Duration in milliseconds of color active
+              </q-tooltip>
+            </q-badge>
+          </div>
+          <q-slider v-model="f" :min="50" :max="1000" :step="50" label/>
+
+          <div class="row items-center">
+            <span class="q-mr-sm">Delay (ms)</span>
+            <q-badge rounded>
+              <span class="help">?</span>
+              <q-tooltip anchor="center right" self="center left" :offset="[4, 4]">
+                Duration in milliseconds of interval until next color plays
+              </q-tooltip>
+            </q-badge>
+          </div>
+          <q-slider v-model="d" :min="50" :max="1000" :step="50" label/>
+
+          <div class="row items-center">
+            <span class="q-mr-sm">Round Delay (ms)</span>
+            <q-badge rounded>
+              <span class="help">?</span>
+              <q-tooltip anchor="center right" self="center left" :offset="[4, 4]">
+                Duration in milliseconds of interval until next round starts when player has finished the sequence<br>
+                (recommended is be slightly greater than frequency + delay)
+              </q-tooltip>
+            </q-badge>
+          </div>
+          <q-slider v-model="rd" :min="50" :max="2000" :inner-min="f + d" :step="50" label/>
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="OK" color="primary" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
@@ -114,7 +172,7 @@ font-color = #B7B7B7
   height game-size
   position relative
 
-.game > .flex
+.game > .row
   width 100%
   height 50%
 
@@ -139,28 +197,45 @@ font-color = #B7B7B7
   color font-color
   line-height 1
 
-.play
+.score
+  font-size 6vmin
+
+.play, .settings, .retry-btn, .record, .home-btn
   cursor pointer
+
+.play
   font-size 8vmin
 
-.settings
-  cursor pointer
-  margin-right 4px
+.settings, .retry-btn
+  margin-right 0.638vmin
 
 .record
-  cursor pointer
   background-color #242424
-  border-radius 16px
-  padding 2px 3.5px 2px 2px
+  border-radius 2.55vmin
+  padding 0.319vmin 0.558vmin 0.319vmin 0.319vmin
 
   .record-text
     font-size 3.7vmin
+
+.q-badge
+  padding 4px
+  width 20px
+  height 20px
+
+.help
+  font-size 14px
+  margin 0 auto
+
+.card-dialog
+  min-width 30%
 
 </style>
 
 <script>
 
 import { defineComponent } from 'vue'
+
+import { Howl } from 'howler'
 
 const randomColor = () => ['r', 'g', 'b', 'y'][Math.floor(Math.random() * 4)]
 
@@ -172,10 +247,11 @@ const colors = {
 }
 
 const audio = {
-  red: new Audio('../audio/red.mp3'),
-  green: new Audio('../audio/green.mp3'),
-  blue: new Audio('../audio/blue.mp3'),
-  yellow: new Audio('../audio/yellow.mp3')
+  red: '../audio/red.mp3',
+  green: '../audio/green.mp3',
+  blue: '../audio/blue.mp3',
+  yellow: '../audio/yellow.mp3',
+  gameover: '../audio/gameover.mp3'
 }
 
 export default defineComponent({
@@ -183,65 +259,104 @@ export default defineComponent({
   data: () => ({
     seq: [],
     state: 0, // 0 = menu; 1 = game; 2 = gameover;
-    playing: false,
-    pressIndex: 0,
-    f: 400, // keep f + d >= 600 until fix song crack
-    d: 200
+    playing: false, // true = is playing sequence; false = waiting player finish sequence
+    seqIndex: 0, // player index in sequence
+    f: 350, // active time per color
+    d: 200, // delay between colors in sequence
+    rd: 750, // round delay (time for play sequence again when player has finished it)
+    modalSettings: false,
+    modalRecords: false
   }),
   computed: {
     score () {
-      return this.seq.length
+      return (this.seq.length || 1) - 1
     }
   },
   methods: {
+    // Start a new game
     start () {
-      this.seq = [...this.seq, randomColor()]
-      // this.seq = ['r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r']
-      this.playSeq()
-      this.playing = true
-      this.pressIndex = 0
-      // console.log(this.seq)
-    },
-    press (color) {
-      if (!this.playing) {
-        if (this.seq[this.pressIndex] === color) {
-          // this.activate(colors[color])
-          this.playAudio(colors[color])
-          this.pressIndex += 1
-          if (this.pressIndex === this.seq.length) {
-            setTimeout(() => this.start(), this.d)
-          }
-          return
-        }
-        console.log('lose')
-      }
-    },
-    playSeq (i = 0) {
-      console.log('called')
-      const c = this.seq[i]
+      this.state = 1
+      this.seq = []
       this.deactivateAll()
-      if (c) {
-        setTimeout(() => {
-          // console.log(c)
-          this.activate(colors[c])
-          this.playAudio(colors[c])
-          setTimeout(() => this.playSeq(i + 1), this.f)
-        }, this.d)
+      this.next()
+    },
+    // Start game or next round
+    next () {
+      this.seq = [...this.seq, randomColor()] // generate sequence
+      // this.seq = ['r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r']
+      this.playing = true
+      this.seqIndex = 0
 
+      setTimeout(() => this.playSeq(), this.rd)
+    },
+    // Play color sequence
+    playSeq (i = 0) {
+      const c = this.seq[i]
+
+      // if sequence finished
+      if (!c) {
+        this.playing = false
         return
       }
-      return this.finish()
+
+      // play color pressed
+      this.playColor(colors[c])
+
+      // frequency + delay to call next color
+      setTimeout(() => this.playSeq(i + 1), this.f + this.d)
     },
-    finish () {
-      this.playing = false
+    // Color pressed
+    press (color) {
+      // ignore if sequence is playing or game finished
+      if (this.playing || this.state !== 1) {
+        return
+      }
+
+      // if color is correct
+      if (this.seq[this.seqIndex] === color) {
+        this.playColor(colors[color])
+
+        this.seqIndex += 1
+
+        // if round finished
+        if (this.seqIndex === this.seq.length) {
+          this.next()
+        }
+        return
+      }
+
+      this.gameover() // otherwise gameover
+    },
+    // Gameover when miss a color
+    gameover () {
+      this.state = 2
+      this.gameoverSequence()
+    },
+    gameoverSequence () {
+      this.playAudio('gameover')
+      for (let i = 0; i < 4; i++) {
+        setTimeout(() => {
+          if (this.state !== 2) return
+          if (i % 2) this.deactivateAll(); else this.activateAll()
+        }, i * 500)
+      }
+    },
+    playColor (color) {
+      this.deactivateAll() // deactivate other colors
+      this.activate(color) // highlight color button
+      this.playAudio(color) // play color audio
+
+      // deactivate highlight after frequency time (if pressed index not change)
+      ;((i) => setTimeout(() => { if (this.seqIndex <= i && this.state === 1) this.deactivate(color) }, this.f))(this.seqIndex + 1)
+    },
+    playAudio (id) {
+      new Howl({ src: audio[id] }).play()
     },
     activate (color) {
       this.$refs[color].classList.add(color + '-active')
     },
-    playAudio (color) {
-      audio[color].pause()
-      audio[color].currentTime = 0
-      audio[color].play()
+    activateAll () {
+      Object.values(colors).forEach(c => this.activate(c))
     },
     deactivate (color) {
       this.$refs[color].classList.remove(color + '-active')
@@ -249,7 +364,12 @@ export default defineComponent({
     deactivateAll () {
       Object.values(colors).forEach(c => this.deactivate(c))
     },
+    menu () {
+      this.deactivateAll()
+      this.state = 0
+    },
     settings () {
+      this.modalSettings = true
       console.log('open settings')
     },
     records () {
