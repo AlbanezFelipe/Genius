@@ -45,7 +45,7 @@
 
         <q-card-section class="q-pt-none">
           <div class="row items-center">
-            <span class="q-mr-sm">Frequency (ms)</span>
+            <span class="q-mr-sm">Frequency (ms) {{ f }}</span>
             <q-badge rounded>
               <span class="help">?</span>
               <q-tooltip anchor="center right" self="center left" :offset="[4, 4]">
@@ -53,10 +53,10 @@
               </q-tooltip>
             </q-badge>
           </div>
-          <q-slider v-model="f" :min="50" :max="1000" :step="50" label/>
+          <q-slider v-model="f" :min="50" :max="1000" :step="50" label @change="saveSettings"/>
 
           <div class="row items-center">
-            <span class="q-mr-sm">Delay (ms)</span>
+            <span class="q-mr-sm">Delay (ms) {{ d }}</span>
             <q-badge rounded>
               <span class="help">?</span>
               <q-tooltip anchor="center right" self="center left" :offset="[4, 4]">
@@ -64,10 +64,10 @@
               </q-tooltip>
             </q-badge>
           </div>
-          <q-slider v-model="d" :min="50" :max="1000" :step="50" label/>
+          <q-slider v-model="d" :min="50" :max="1000" :step="50" label @change="saveSettings"/>
 
           <div class="row items-center">
-            <span class="q-mr-sm">Round Delay (ms)</span>
+            <span class="q-mr-sm">Round Delay (ms) {{ rd }}</span>
             <q-badge rounded>
               <span class="help">?</span>
               <q-tooltip anchor="center right" self="center left" :offset="[4, 4]">
@@ -76,7 +76,7 @@
               </q-tooltip>
             </q-badge>
           </div>
-          <q-slider v-model="rd" :min="50" :max="2000" :inner-min="f + d" :step="50" label/>
+          <q-slider v-model="rd" :min="50" :max="2000" :inner-min="f + d" :step="50" label @change="saveSettings"/>
         </q-card-section>
 
         <q-card-actions align="right">
@@ -254,6 +254,8 @@ const audio = {
   gameover: '../audio/gameover.mp3'
 }
 
+const initSettings = JSON.parse(localStorage.settings || '{}')
+
 export default defineComponent({
   name: 'Game',
   data: () => ({
@@ -261,9 +263,9 @@ export default defineComponent({
     state: 0, // 0 = menu; 1 = game; 2 = gameover;
     playing: false, // true = is playing sequence; false = waiting player finish sequence
     seqIndex: 0, // player index in sequence
-    f: 350, // active time per color
-    d: 200, // delay between colors in sequence
-    rd: 750, // round delay (time for play sequence again when player has finished it)
+    f: initSettings.f || 350, // active time per color
+    d: initSettings.d || 200, // delay between colors in sequence
+    rd: initSettings.rd || 750, // round delay (time for play sequence again when player has finished it)
     modalSettings: false,
     modalRecords: false
   }),
@@ -282,8 +284,8 @@ export default defineComponent({
     },
     // Start game or next round
     next () {
-      this.seq = [...this.seq, randomColor()] // generate sequence
-      // this.seq = ['r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r', 'r']
+      // this.seq = [...this.seq, randomColor()] // generate sequence
+      this.seq = ['r', 'r']
       this.playing = true
       this.seqIndex = 0
 
@@ -371,6 +373,15 @@ export default defineComponent({
     settings () {
       this.modalSettings = true
       console.log('open settings')
+    },
+    saveSettings () {
+      this.rd = this.f + this.d > this.rd ? this.f + this.d : this.rd
+
+      localStorage.settings = JSON.stringify({
+        f: this.f,
+        d: this.d,
+        rd: this.rd
+      })
     },
     records () {
       console.log('open records')
