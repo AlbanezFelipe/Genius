@@ -267,7 +267,8 @@ export default defineComponent({
     d: initSettings.d || 200, // delay between colors in sequence
     rd: initSettings.rd || 750, // round delay (time for play sequence again when player has finished it)
     modalSettings: false,
-    modalRecords: false
+    modalRecords: false,
+    lastTimeoutColor: null
   }),
   computed: {
     score () {
@@ -284,8 +285,8 @@ export default defineComponent({
     },
     // Start game or next round
     next () {
-      // this.seq = [...this.seq, randomColor()] // generate sequence
-      this.seq = ['r', 'r']
+      this.seq = [...this.seq, randomColor()] // generate sequence
+      // this.seq = ['r', 'r']
       this.playing = true
       this.seqIndex = 0
 
@@ -348,8 +349,11 @@ export default defineComponent({
       this.activate(color) // highlight color button
       this.playAudio(color) // play color audio
 
-      // deactivate highlight after frequency time (if pressed index not change)
-      ;((i) => setTimeout(() => { if (this.seqIndex <= i && this.state === 1) this.deactivate(color) }, this.f))(this.seqIndex + 1)
+      // clear timeout from previous event
+      if (this.lastTimeoutColor) clearTimeout(this.lastTimeoutColor)
+
+      // deactivate highlight after frequency time
+      this.lastTimeoutColor = setTimeout(() => { if (this.state === 1) this.deactivate(color) }, this.f)
     },
     playAudio (id) {
       new Howl({ src: audio[id] }).play()
