@@ -1,5 +1,7 @@
 <template>
   <q-page class="column flex-center bg">
+
+    <!-- Game -->
     <div class="game">
       <div class="row">
         <div ref="red" class="btn red" @click="press('r')"></div>
@@ -9,10 +11,16 @@
         <div ref="blue" class="btn blue" @click="press('b')"></div>
         <div ref="yellow" class="btn yellow" @click="press('y')"></div>
       </div>
+
+      <!-- Menu -->
       <div class="menu">
+
+        <!-- In Game -->
         <template v-if="state === 1">
           <span class="score">{{ score }}</span>
         </template>
+
+        <!-- Game Over -->
         <template v-else-if="state === 2">
           <div class="column">
             <div class="row justify-center">
@@ -24,6 +32,8 @@
             </div>
           </div>
         </template>
+
+        <!-- Main Menu -->
         <template v-else>
           <div class="column">
             <div class="row justify-center play" @click="start">
@@ -31,18 +41,22 @@
             </div>
             <div class="row justify-center items-baseline">
               <q-icon name="settings" class="settings" @click="settings" />
-              <span class="row justify-center items-center record" @click="records"><q-icon name="emoji_events" /><span class="record-text">60</span></span>
+              <span class="row justify-center items-center record" @click="records"><q-icon name="emoji_events" /><span class="record-text">{{ bestScore }}</span></span>
             </div>
           </div>
         </template>
+
       </div>
     </div>
-    <q-dialog v-model="modalSettings" transition-show="rotate" transition-hide="rotate">
+
+    <!-- Dialog Settings -->
+    <q-dialog v-model="dialogSettings" transition-show="rotate" transition-hide="rotate">
       <q-card class="card-dialog">
         <q-card-section>
           <div class="text-h6">Settings</div>
         </q-card-section>
 
+        <!-- Frequency -->
         <q-card-section class="q-pt-none">
           <div class="row items-center">
             <span class="q-mr-sm">Frequency (ms) {{ f }}</span>
@@ -55,6 +69,7 @@
           </div>
           <q-slider v-model="f" :min="50" :max="1000" :step="50" label @change="saveSettings"/>
 
+          <!-- Delay -->
           <div class="row items-center">
             <span class="q-mr-sm">Delay (ms) {{ d }}</span>
             <q-badge rounded>
@@ -66,6 +81,7 @@
           </div>
           <q-slider v-model="d" :min="50" :max="1000" :step="50" label @change="saveSettings"/>
 
+          <!-- Round Delay -->
           <div class="row items-center">
             <span class="q-mr-sm">Round Delay (ms) {{ rd }}</span>
             <q-badge rounded>
@@ -84,14 +100,53 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
+
+    <!-- Dialog Records -->
+    <q-dialog v-model="dialogRecords" transition-show="rotate" transition-hide="rotate">
+      <q-card class="card-dialog">
+          <q-card-section>
+            <div class="text-h6">High Scores</div>
+          </q-card-section>
+
+          <q-card-section class="q-pt-none">
+            <div class="q-pa-md">
+              <q-list>
+                <template v-for="(game, index) in highScores" :key="index">
+                  <q-item>
+                    <q-item-section avatar>
+                      <template v-if="index < 3">
+                        <q-icon :class="'highscore-' + index" name="emoji_events" />
+                      </template>
+                      <template v-else>
+                        <span class="highscore">{{ index + 1 }}</span>
+                      </template>
+                    </q-item-section>
+
+                    <q-item-section>
+                    <div class="row items-end">
+                      <span class="highscore-value">{{ game.score }}</span>
+                      <div class="column">
+                        <span class="highscore-info">{{ game.date }}</span>
+                        <span class="highscore-info">({{ game.settings }})</span>
+                      </div>
+                    </div>
+                    </q-item-section>
+                  </q-item>
+                </template>
+              </q-list>
+            </div>
+          </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="OK" color="primary" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
   </q-page>
 </template>
 
 <style lang="stylus">
-
-// #333333 : gray
-// #ECE7EE : center
-// #32050C : counter-color
 
 red           = #9F0F17
 red-active    = #FF4C4C
@@ -106,6 +161,10 @@ yellow        = #CCA707
 yellow-active = #FED93F
 
 bg-color =  #313131
+
+gold   = #C9B037
+silver = #B4B4B4
+bronze = #AD8A56
 
 border-size = 2.5vmin
 border-color = #101010
@@ -228,6 +287,38 @@ font-color = #B7B7B7
 
 .card-dialog
   min-width 30%
+  font-family Font
+  color white
+  background-color #121212
+
+// 1st Gold
+.highscore-0
+  color gold
+  transform scale(1.5)
+
+// 2nd Silver
+.highscore-1
+  color silver
+  transform scale(1.2)
+
+// 3rd Bronze
+.highscore-2
+  color bronze
+
+// > 3rd
+.highscore
+  font-weight bold
+  text-align center
+  width 24px
+
+.highscore-value
+  font-size 28px
+  margin-right 16px
+  min-width (28*1.2)px
+
+.highscore-info
+  font-size 12px
+  color rgba(255,255,255,.5)
 
 </style>
 
@@ -255,6 +346,7 @@ const audio = {
 }
 
 const initSettings = JSON.parse(localStorage.settings || '{}')
+const initScores = JSON.parse(localStorage.scores || '[]').slice(0, 999)
 
 export default defineComponent({
   name: 'Game',
@@ -266,13 +358,20 @@ export default defineComponent({
     f: initSettings.f || 350, // active time per color
     d: initSettings.d || 200, // delay between colors in sequence
     rd: initSettings.rd || 750, // round delay (time for play sequence again when player has finished it)
-    modalSettings: false,
-    modalRecords: false,
+    scores: initScores,
+    dialogSettings: false,
+    dialogRecords: false,
     lastTimeoutColor: null
   }),
   computed: {
     score () {
       return (this.seq.length || 1) - 1
+    },
+    bestScore () {
+      return (this.scores.reduce((s, g) => g.score > s ? g.score : s, 0) + '').padStart(2, '0')
+    },
+    highScores () {
+      return [...this.scores].sort((a, b) => a.score < b.score ? 1 : -1)
     }
   },
   methods: {
@@ -334,6 +433,7 @@ export default defineComponent({
     gameover () {
       this.state = 2
       this.gameoverSequence()
+      this.saveRecord()
     },
     gameoverSequence () {
       this.playAudio('gameover')
@@ -375,8 +475,7 @@ export default defineComponent({
       this.state = 0
     },
     settings () {
-      this.modalSettings = true
-      console.log('open settings')
+      this.dialogSettings = true
     },
     saveSettings () {
       this.rd = this.f + this.d > this.rd ? this.f + this.d : this.rd
@@ -388,7 +487,16 @@ export default defineComponent({
       })
     },
     records () {
-      console.log('open records')
+      this.dialogRecords = true
+    },
+    saveRecord () {
+      this.scores = [...this.scores, {
+        score: this.score,
+        settings: [this.f, this.d, this.rd].join('|'),
+        date: new Date().toISOString().split('T')[0]
+      }]
+
+      localStorage.scores = JSON.stringify(this.highScores)
     }
   }
 })
