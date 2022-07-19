@@ -351,25 +351,28 @@ const initScores = JSON.parse(localStorage.scores || '[]').slice(0, 999)
 export default defineComponent({
   name: 'Game',
   data: () => ({
-    seq: [],
-    state: 0, // 0 = menu; 1 = game; 2 = gameover;
+    seq: [],        // Game sequence
+    state: 0,       // 0 = menu; 1 = game; 2 = gameover;
     playing: false, // true = is playing sequence; false = waiting player finish sequence
-    seqIndex: 0, // player index in sequence
-    f: initSettings.f || 350, // active time per color
-    d: initSettings.d || 200, // delay between colors in sequence
-    rd: initSettings.rd || 750, // round delay (time for play sequence again when player has finished it)
-    scores: initScores,
-    dialogSettings: false,
-    dialogRecords: false,
-    lastTimeoutColor: null
+    seqIndex: 0,    // Player index in game sequence
+    f: initSettings.f || 350,   // Active time per color
+    d: initSettings.d || 200,   // Delay between colors in sequence
+    rd: initSettings.rd || 750, // Round delay (time for play sequence again when player has finished it)
+    scores: initScores,    // Records data
+    dialogSettings: false, // Dialog Settings
+    dialogRecords: false,  // Dialog Records
+    lastTimeoutColor: null // Last setTimeout id of a color pressed
   }),
   computed: {
+    // Number of rounds beat
     score () {
       return (this.seq.length || 1) - 1
     },
+    // Higher score in records
     bestScore () {
       return (this.scores.reduce((s, g) => g.score > s ? g.score : s, 0) + '').padStart(2, '0')
     },
+    // Records in descending by score
     highScores () {
       return [...this.scores].sort((a, b) => a.score < b.score ? 1 : -1)
     }
@@ -385,7 +388,6 @@ export default defineComponent({
     // Start game or next round
     next () {
       this.seq = [...this.seq, randomColor()] // generate sequence
-      // this.seq = ['r', 'r']
       this.playing = true
       this.seqIndex = 0
 
@@ -409,8 +411,14 @@ export default defineComponent({
     },
     // Color pressed
     press (color) {
-      // ignore if sequence is playing or game finished
-      if (this.playing || this.state !== 1) {
+      // ignore if sequence is playing or in gameover state
+      if (this.playing || this.state === 2) {
+        return
+      }
+
+      // menu is free to play color
+      if (this.state === 0) {
+        this.playColor(colors[color])
         return
       }
 
@@ -429,12 +437,13 @@ export default defineComponent({
 
       this.gameover() // otherwise gameover
     },
-    // Gameover when miss a color
+    // Go to Gameover state when miss a color
     gameover () {
       this.state = 2
       this.gameoverSequence()
       this.saveRecord()
     },
+    // Gameover blink all colors twice and play gameover buzzer
     gameoverSequence () {
       this.playAudio('gameover')
       for (let i = 0; i < 4; i++) {
@@ -444,6 +453,7 @@ export default defineComponent({
         }, i * 500)
       }
     },
+    // Play color audio and highlight it
     playColor (color) {
       this.deactivateAll() // deactivate other colors
       this.activate(color) // highlight color button
@@ -453,32 +463,40 @@ export default defineComponent({
       if (this.lastTimeoutColor) clearTimeout(this.lastTimeoutColor)
 
       // deactivate highlight after frequency time
-      this.lastTimeoutColor = setTimeout(() => { if (this.state === 1) this.deactivate(color) }, this.f)
+      this.lastTimeoutColor = setTimeout(() => { if (this.state !== 2) this.deactivate(color) }, this.f)
     },
+    // Play a audio
     playAudio (id) {
       new Howl({ src: audio[id] }).play()
     },
+    // Highlight a color button
     activate (color) {
       this.$refs[color].classList.add(color + '-active')
     },
+    // Highlight all color buttons
     activateAll () {
       Object.values(colors).forEach(c => this.activate(c))
     },
+    // Remove highlight from a color button
     deactivate (color) {
       this.$refs[color].classList.remove(color + '-active')
     },
+    // Clear all highlights
     deactivateAll () {
       Object.values(colors).forEach(c => this.deactivate(c))
     },
+    // Go to menu state
     menu () {
       this.deactivateAll()
       this.state = 0
     },
+    // Open dialog settings
     settings () {
       this.dialogSettings = true
     },
+    // Store settings in localStorage
     saveSettings () {
-      this.rd = this.f + this.d > this.rd ? this.f + this.d : this.rd
+      this.rd = this.f + this.d > this.rd ? this.f + this.d : this.rd // Fix Round Delay offset
 
       localStorage.settings = JSON.stringify({
         f: this.f,
@@ -486,16 +504,17 @@ export default defineComponent({
         rd: this.rd
       })
     },
+    // Open dialog records
     records () {
       this.dialogRecords = true
     },
+    // Save current game record in localStorage
     saveRecord () {
       this.scores = [...this.scores, {
-        score: this.score,
-        settings: [this.f, this.d, this.rd].join('|'),
-        date: new Date().toISOString().split('T')[0]
+        score: this.score,                             // Game Score
+        settings: [this.f, this.d, this.rd].join('|'), // Current Settings in "n|n|n" format
+        date: new Date().toISOString().split('T')[0]   // Current Date
       }]
-
       localStorage.scores = JSON.stringify(this.highScores)
     }
   }
