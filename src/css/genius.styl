@@ -1,4 +1,6 @@
+//-----------------------------------------
 // Colors
+//-----------------------------------------
 red           = #9F0F17
 red-active    = #FF4C4C
 
@@ -17,22 +19,35 @@ gold   = #C9B037
 silver = #B4B4B4
 bronze = #AD8A56
 
+//-----------------------------------------
 // Background Color
+//-----------------------------------------
 menu-bg-color   = #181818
 dialog-bg-color = #121212
 record-bg-color = #242424
 
+//-----------------------------------------
 // Game Border
+//-----------------------------------------
 border-size = 2.5vmin
 border-color = #101010
 
-// Game Size and Viewports Breakpoints
+//-----------------------------------------
+// Game Size & Viewports Breakpoints
+//-----------------------------------------
 game-size = 95vmin
 
 sm = 576px
 
 menu-size = 25%
 menu-size-sm = 40%
+
+font-size-menu = 4vmin
+font-size-score = 6vmin
+font-size-play = 8vmin
+
+menu-calc(new-size, v)
+  ((new-size / menu-size) * v)vmin
 
 menu(size)
   offset = "calc((%s - %s) / 2)" % (game-size size)
@@ -41,7 +56,9 @@ menu(size)
   width size
   height size
 
+//-----------------------------------------
 // Font
+//-----------------------------------------
 font-color = #B7B7B7
 
 @font-face
@@ -49,7 +66,9 @@ font-color = #B7B7B7
   font-style normal
   src url('../assets/Roboto_Mono/RobotoMono-VariableFont_wght.ttf')
 
+//-----------------------------------------
 // Utils
+//-----------------------------------------
 no-select()
   -webkit-touch-callout none
   -webkit-user-select none
@@ -59,7 +78,9 @@ no-select()
   -ms-user-select none
     user-select none
 
-//
+//-----------------------------------------
+// Background & Color buttons
+//-----------------------------------------
 .red
   background-color red
   border-style solid
@@ -116,6 +137,10 @@ no-select()
 .btn
   width 50%
 
+//-----------------------------------------
+// Menu
+//-----------------------------------------
+
 .menu
   position absolute
   menu(menu-size)
@@ -126,32 +151,63 @@ no-select()
   display flex
   align-items center
   justify-content center
-  font-size 4vmin
+  font-size font-size-menu
   color font-color
   line-height 1
+  no-select()
 
   @media (max-width: sm)
     menu(menu-size-sm)
+    font-size menu-calc(menu-size-sm, font-size-menu)
 
 .score
-  font-size 6vmin
+  font-size font-size-score
+
+  @media (max-width: sm)
+    font-size menu-calc(menu-size-sm, font-size-score)
 
 .play, .settings, .retry-btn, .record, .home-btn
   cursor pointer
 
 .play
-  font-size 8vmin
+  font-size font-size-play
+  
+  @media (max-width: sm)
+    font-size menu-calc(menu-size-sm, font-size-play)
 
 .settings, .retry-btn
   margin-right 0.638vmin
+
+  @media (max-width: sm)
+    margin-right menu-calc(menu-size-sm, 0.638vmin)
 
 .record
   background-color record-bg-color
   border-radius 2.55vmin
   padding 0.319vmin 0.558vmin 0.319vmin 0.319vmin
 
+  @media (max-width: sm)
+    border-radius menu-calc(menu-size-sm, 2.55vmin)
+    p = menu-calc(menu-size-sm, 0.319vmin)
+    pr = menu-calc(menu-size-sm, 0.558vmin)
+    padding p pr p p
+
   .record-text
     font-size 3.7vmin
+
+    @media (max-width: sm)
+      font-size menu-calc(menu-size-sm, 3.7vmin)
+
+//-----------------------------------------
+// Dialogs
+//-----------------------------------------
+
+.card-dialog
+  width 35%
+  min-width 305px
+  font-family Font
+  color white
+  background-color dialog-bg-color
 
 .q-badge
   padding 4px
@@ -161,13 +217,6 @@ no-select()
 .help
   font-size 14px
   margin 0 auto
-
-.card-dialog
-  width 35%
-  min-width 305px
-  font-family Font
-  color white
-  background-color dialog-bg-color
 
 // 1st Gold
 .highscore-0
