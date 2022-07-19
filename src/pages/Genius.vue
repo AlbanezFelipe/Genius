@@ -1,5 +1,5 @@
 <template>
-  <q-page class="column flex-center bg">
+  <div class="column flex-center bg">
 
     <!-- Game -->
     <div class="game">
@@ -50,7 +50,7 @@
     </div>
 
     <!-- Dialog Settings -->
-    <q-dialog v-model="dialogSettings" transition-show="rotate" transition-hide="rotate">
+    <q-dialog v-model="dialogSettings" transition-show="scale" transition-hide="scale">
       <q-card class="card-dialog">
         <q-card-section>
           <div class="text-h6">Settings</div>
@@ -102,7 +102,7 @@
     </q-dialog>
 
     <!-- Dialog Records -->
-    <q-dialog v-model="dialogRecords" transition-show="rotate" transition-hide="rotate">
+    <q-dialog v-model="dialogRecords" transition-show="scale" transition-hide="scale">
       <q-card class="card-dialog">
           <q-card-section>
             <div class="text-h6">High Scores</div>
@@ -143,183 +143,11 @@
       </q-card>
     </q-dialog>
 
-  </q-page>
+  </div>
 </template>
 
 <style lang="stylus">
-
-red           = #9F0F17
-red-active    = #FF4C4C
-
-green         = #00A74A
-green-active  = #13FF7C
-
-blue          = #094A8F
-blue-active   = #1C8CFF
-
-yellow        = #CCA707
-yellow-active = #FED93F
-
-bg-color =  #313131
-
-gold   = #C9B037
-silver = #B4B4B4
-bronze = #AD8A56
-
-border-size = 2.5vmin
-border-color = #101010
-
-game-size = 95vmin
-
-menu-size = 25%
-menu-size-calc = "calc((%s - %s) / 2)" % (game-size menu-size)
-
-menu-bg-color = #181818
-
-font-color = #B7B7B7
-
-@font-face
-  font-family Font
-  font-style normal
-  src url('../assets/Roboto_Mono/RobotoMono-VariableFont_wght.ttf')
-
-.red
-  background-color red
-  border-style solid
-  border-width border-size (border-size / 2) (border-size / 2) border-size
-  border-color border-color
-  border-top-left-radius 100%
-
-.red-active
-  background-color red-active
-
-.green
-  background-color green
-  border-style solid
-  border-width border-size border-size (border-size / 2) (border-size / 2)
-  border-color border-color
-  border-top-right-radius 100%
-
-.green-active
-  background-color green-active
-
-.blue
-  background-color blue
-  border-style solid
-  border-width (border-size / 2) (border-size / 2) border-size border-size
-  border-color border-color
-  border-bottom-left-radius 100%
-
-.blue-active
-  background-color blue-active
-
-.yellow
-  background-color yellow
-  border-style solid
-  border-width (border-size / 2) border-size border-size (border-size / 2)
-  border-color border-color
-  border-bottom-right-radius 100%
-
-.yellow-active
-  background-color yellow-active
-
-.bg
-  background-color bg-color
-
-.game
-  width game-size
-  height game-size
-  position relative
-
-.game > .row
-  width 100%
-  height 50%
-
-.btn
-  width 50%
-
-.menu
-  position absolute
-  top menu-size-calc
-  left menu-size-calc
-  width menu-size
-  height menu-size
-  border-radius 100%
-  background-color menu-bg-color
-  border border-size solid border-color
-  font-family Font
-  display flex
-  align-items center
-  justify-content center
-  font-size 4vmin
-  // color #04F404
-  color font-color
-  line-height 1
-
-.score
-  font-size 6vmin
-
-.play, .settings, .retry-btn, .record, .home-btn
-  cursor pointer
-
-.play
-  font-size 8vmin
-
-.settings, .retry-btn
-  margin-right 0.638vmin
-
-.record
-  background-color #242424
-  border-radius 2.55vmin
-  padding 0.319vmin 0.558vmin 0.319vmin 0.319vmin
-
-  .record-text
-    font-size 3.7vmin
-
-.q-badge
-  padding 4px
-  width 20px
-  height 20px
-
-.help
-  font-size 14px
-  margin 0 auto
-
-.card-dialog
-  min-width 30%
-  font-family Font
-  color white
-  background-color #121212
-
-// 1st Gold
-.highscore-0
-  color gold
-  transform scale(1.5)
-
-// 2nd Silver
-.highscore-1
-  color silver
-  transform scale(1.2)
-
-// 3rd Bronze
-.highscore-2
-  color bronze
-
-// > 3rd
-.highscore
-  font-weight bold
-  text-align center
-  width 24px
-
-.highscore-value
-  font-size 28px
-  margin-right 16px
-  min-width (28*1.2)px
-
-.highscore-info
-  font-size 12px
-  color rgba(255,255,255,.5)
-
+  @import '../css/genius.styl'
 </style>
 
 <script>
@@ -349,7 +177,7 @@ const initSettings = JSON.parse(localStorage.settings || '{}')
 const initScores = JSON.parse(localStorage.scores || '[]').slice(0, 999)
 
 export default defineComponent({
-  name: 'Game',
+  name: 'Genius',
   data: () => ({
     seq: [],        // Game sequence
     state: 0,       // 0 = menu; 1 = game; 2 = gameover;
