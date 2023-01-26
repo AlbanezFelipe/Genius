@@ -27,6 +27,12 @@ dialog-bg-color = #121212
 record-bg-color = #242424
 
 //-----------------------------------------
+// Text Color
+//-----------------------------------------
+menu-text-color   = #B7B7B7
+dialog-text-color = #EDEDED
+
+//-----------------------------------------
 // Game Border
 //-----------------------------------------
 border-size = 2.5vmin
@@ -59,8 +65,6 @@ menu(size)
 //-----------------------------------------
 // Font
 //-----------------------------------------
-font-color = #B7B7B7
-
 @font-face
   font-family Font
   font-style normal
@@ -138,7 +142,7 @@ no-select()
   width 50%
 
 //-----------------------------------------
-// Text color
+// Color markups
 //-----------------------------------------
 
 .text-r
@@ -168,7 +172,7 @@ no-select()
   align-items center
   justify-content center
   font-size font-size-menu
-  color font-color
+  color menu-text-color
   line-height 1
   no-select()
 
@@ -222,7 +226,7 @@ no-select()
   width 35%
   min-width 305px
   font-family Font
-  color white
+  color dialog-text-color
   background-color dialog-bg-color
 
 .q-badge

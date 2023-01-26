@@ -152,7 +152,7 @@
             <div class="q-pa-md">
               <template v-for="(color, index) in seq" :key="index">
                 <span :class="'text-' + color">{{ color.toUpperCase() }}</span>
-                <span v-if="seqIndex === index"> &#10007;</span>
+                <span v-if="seqIndex === index"> (<span :class="'text-' + blunder">{{ blunder.toUpperCase() }}</span> ??)</span>
                 <span v-if="index + 1 < seq.length"> - </span>
               </template>
             </div>
@@ -204,6 +204,7 @@ export default defineComponent({
     state: 0,       // 0 = menu; 1 = game; 2 = gameover;
     playing: false, // true = is playing sequence; false = waiting player finish sequence
     seqIndex: 0,    // Player index in game sequence
+    blunder: '',    // Blunder color when player misses, used in dialog sequence
     f: initSettings.f || 350,   // Active time per color
     d: initSettings.d || 200,   // Delay between colors in sequence
     rd: initSettings.rd || 750, // Round delay (time for play sequence again when player has finished it)
@@ -232,7 +233,7 @@ export default defineComponent({
     start () {
       this.state = 1
       this.seq = []
-      this.seq = new Array(20).fill().map(() => randomColor()) // autofill
+      // this.seq = new Array(25).fill().map(randomColor) // autofill
       this.deactivateAll()
       this.next()
     },
@@ -286,7 +287,9 @@ export default defineComponent({
         return
       }
 
-      this.gameover() // otherwise gameover
+      // otherwise gameover
+      this.blunder = color
+      this.gameover()
     },
     // Go to Gameover state when miss a color
     gameover () {
@@ -318,7 +321,7 @@ export default defineComponent({
     },
     // Play a audio
     playAudio (id) {
-      new Howl({ src: audio[id] }).play()
+      new Howl({ src: audio[id], html5: true }).play()
     },
     // Highlight a color button
     activate (color) {
