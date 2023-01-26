@@ -138,6 +138,22 @@ no-select()
   width 50%
 
 //-----------------------------------------
+// Text color
+//-----------------------------------------
+
+.text-r
+  color red-active
+
+.text-g
+  color green-active
+
+.text-b
+  color blue-active
+
+.text-y
+  color yellow-active
+
+//-----------------------------------------
 // Menu
 //-----------------------------------------
 
@@ -166,7 +182,7 @@ no-select()
   @media (max-width: sm)
     font-size menu-calc(menu-size-sm, font-size-score)
 
-.play, .settings, .retry-btn, .record, .home-btn
+.play, .settings, .retry-btn, .record, .home-btn, .question-btn
   cursor pointer
 
 .play
@@ -175,7 +191,7 @@ no-select()
   @media (max-width: sm)
     font-size menu-calc(menu-size-sm, font-size-play)
 
-.settings, .retry-btn
+.settings, .retry-btn, .question-btn
   margin-right 0.638vmin
 
   @media (max-width: sm)

@@ -28,6 +28,7 @@
             </div>
             <div class="row justify-center items-center">
               <q-icon @click="start" class="retry-btn" name="refresh"/>
+              <q-icon @click="showSeq" class="question-btn" name="question_mark"/>
               <q-icon @click="menu" class="home-btn" name="home"/>
             </div>
           </div>
@@ -143,6 +144,26 @@
       </q-card>
     </q-dialog>
 
+    <!-- Dialog Sequence -->
+    <q-dialog v-model="dialogSequence" transition-show="scale" transition-hide="scale">
+      <q-card class="card-dialog">
+
+          <q-card-section class="q-pt-none">
+            <div class="q-pa-md">
+              <template v-for="(color, index) in seq" :key="index">
+                <span :class="'text-' + color">{{ color.toUpperCase() }}</span>
+                <span v-if="seqIndex === index"> &#10007;</span>
+                <span v-if="index + 1 < seq.length"> - </span>
+              </template>
+            </div>
+          </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="OK" color="primary" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
   </div>
 </template>
 
@@ -189,6 +210,7 @@ export default defineComponent({
     scores: initScores,    // Records data
     dialogSettings: false, // Dialog Settings
     dialogRecords: false,  // Dialog Records
+    dialogSequence: false, // Dialog Sequence
     lastTimeoutColor: null // Last setTimeout id of a color pressed
   }),
   computed: {
@@ -210,6 +232,7 @@ export default defineComponent({
     start () {
       this.state = 1
       this.seq = []
+      this.seq = new Array(20).fill().map(() => randomColor()) // autofill
       this.deactivateAll()
       this.next()
     },
@@ -344,6 +367,10 @@ export default defineComponent({
         date: new Date().toISOString().split('T')[0]   // Current Date
       }]
       localStorage.scores = JSON.stringify(this.highScores)
+    },
+    // Open dialog sequence
+    showSeq () {
+      this.dialogSequence = true
     }
   }
 })
