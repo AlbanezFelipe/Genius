@@ -94,6 +94,18 @@
             </q-badge>
           </div>
           <q-slider v-model="rd" :min="50" :max="2000" :inner-min="f + d" :step="50" label @change="saveSettings"/>
+
+          <div class="row items-center">
+            <span class="q-mr-sm">Click Limit (ms) {{ clickLimit }}</span>
+            <q-badge rounded>
+              <span class="help">?</span>
+              <q-tooltip anchor="center right" self="center left" :offset="[4, 4]">
+                For avoid accidentally click twice<br>
+                (if you do not want this just set to 0)
+              </q-tooltip>
+            </q-badge>
+          </div>
+          <q-slider v-model="clickLimit" :min="0" :max="300" :step="10" label @change="saveSettings"/>
         </q-card-section>
 
         <q-card-actions align="right">
@@ -208,11 +220,13 @@ export default defineComponent({
     f: initSettings.f || 350,   // Active time per color
     d: initSettings.d || 200,   // Delay between colors in sequence
     rd: initSettings.rd || 750, // Round delay (time for play sequence again when player has finished it)
+    clickLimit: initSettings.clickLimit || 100, // For avoid accidentally click twice
     scores: initScores,    // Records data
     dialogSettings: false, // Dialog Settings
     dialogRecords: false,  // Dialog Records
     dialogSequence: false, // Dialog Sequence
-    lastTimeoutColor: null // Last setTimeout id of a color pressed
+    lastTimeoutColor: null, // Last setTimeout id of a color pressed
+    clickLimitBlocked: false // For click limit control
   }),
   computed: {
     // Number of rounds beat
@@ -267,6 +281,15 @@ export default defineComponent({
       if (this.playing || this.state === 2) {
         return
       }
+
+      // ignore if clickLimitBlocked is activated
+      if (this.clickLimitBlocked) return
+
+      // click limit manager
+      this.clickLimitBlocked = true
+      setTimeout(() => {
+        this.clickLimitBlocked = false
+      }, this.clickLimit)
 
       // menu is free to play color
       if (this.state === 0) {
@@ -355,7 +378,8 @@ export default defineComponent({
       localStorage.settings = JSON.stringify({
         f: this.f,
         d: this.d,
-        rd: this.rd
+        rd: this.rd,
+        clickLimit: this.clickLimit
       })
     },
     // Open dialog records
